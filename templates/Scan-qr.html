@@ -1,0 +1,137 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Scan QR - Smart Attendance</title>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>📷 Scan QR Code</h1>
+
+    <p>Show the student's QR code in front of the camera.</p>
+
+    <div id="reader"></div>
+
+    <div id="result">
+        Waiting for QR scan...
+    </div>
+
+    <button onclick="window.location.href='/student-dashboard'">
+        Back to Dashboard
+    </button>
+
+
+    <script>
+
+        function onScanSuccess(decodedText, decodedResult) {
+
+            document.getElementById("result").innerText =
+                "QR detected: " + decodedText;
+
+            console.log("QR Code:", decodedText);
+
+            html5QrcodeScanner.clear();
+
+            fetch("/mark-attendance", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    student_id: decodedText
+                })
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                if (data.success) {
+
+                    document.getElementById("result").innerText =
+                        "✅ Attendance marked successfully!";
+
+                } else {
+
+                    document.getElementById("result").innerText =
+                        "❌ " + data.message;
+
+                }
+
+            })
+
+            .catch(error => {
+
+                console.error(error);
+
+                document.getElementById("result").innerText =
+                    "❌ Server error.";
+
+            });
+        }
+
+
+        function onScanFailure(error) {
+            // QR not detected yet
+        }
+
+
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            {
+                fps: 10,
+                qrbox: {
+                    width: 250,
+                    height: 250
+                }
+            },
+            false
+        );
+
+
+        html5QrcodeScanner.render(
+            onScanSuccess,
+            onScanFailure
+        );
+
+    </script>
+
+</body>
+</html>

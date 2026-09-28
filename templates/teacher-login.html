@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teacher Login - Smart Attendance</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="login-box">
+
+            <div class="logo">👨‍🏫</div>
+
+            <h1>Teacher Login</h1>
+
+            <p class="subtitle">
+                Login to manage attendance
+            </p>
+
+            <form id="teacherLoginForm">
+
+                <input
+                    type="email"
+                    id="teacherEmail"
+                    placeholder="Enter Teacher Email"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="teacherPassword"
+                    placeholder="Enter Password"
+                    required
+                >
+
+                <button type="submit">
+                    Login
+                </button>
+
+            </form>
+
+            <button
+                class="back-button"
+                onclick="window.location.href='/'">
+                Back
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        document.getElementById("teacherLoginForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById("teacherEmail").value.trim();
+
+            const password =
+                document.getElementById("teacherPassword").value;
+
+            try {
+
+                const response = await fetch("/teacher-login", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+
+                    window.location.href = "/teacher-dashboard";
+
+                } else {
+
+                    alert(result.message);
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Backend is not connected.");
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

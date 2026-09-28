@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Attendance</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>📊 My Attendance</h1>
+
+    <p>
+        Student ID:
+        <strong id="studentId">Loading...</strong>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody id="attendanceTable">
+            <tr>
+                <td colspan="4">Loading attendance...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button onclick="window.location.href='/student-dashboard'">
+        Back to Dashboard
+    </button>
+
+
+    <script>
+
+        const studentId = localStorage.getItem("studentId");
+
+        document.getElementById("studentId").innerText =
+            studentId || "Not found";
+
+
+        if (!studentId) {
+
+            document.getElementById("attendanceTable").innerHTML =
+                "<tr><td colspan='4'>Student ID not found. Please login again.</td></tr>";
+
+        } else {
+
+            fetch("/api/attendance/" + studentId)
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const table =
+                        document.getElementById("attendanceTable");
+
+                    table.innerHTML = "";
+
+                    if (data.length === 0) {
+
+                        table.innerHTML =
+                            "<tr><td colspan='4'>No attendance records found.</td></tr>";
+
+                        return;
+                    }
+
+                    data.forEach(record => {
+
+                        const row = `
+                            <tr>
+                                <td>${record.subject}</td>
+                                <td>${record.date}</td>
+                                <td>${record.time}</td>
+                                <td>${record.status}</td>
+                            </tr>
+                        `;
+
+                        table.innerHTML += row;
+                    });
+
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
+                    document.getElementById("attendanceTable").innerHTML =
+                        "<tr><td colspan='4'>Unable to load attendance.</td></tr>";
+
+                });
+        }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Generate QR - Smart Attendance</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 30px;
+        }
+
+        input {
+            padding: 12px;
+            width: 250px;
+            margin: 10px;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        #qrcode {
+            margin: 25px auto;
+            width: 256px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Generate Student QR</h1>
+
+    <p>Enter Student ID</p>
+
+    <input
+        type="text"
+        id="studentId"
+        placeholder="Enter Student ID"
+        value="STU001"
+    >
+
+    <br>
+
+    <button onclick="generateQR()">
+        Generate QR
+    </button>
+
+    <div id="qrcode"></div>
+
+    <br>
+
+    <button onclick="window.location.href='/student-dashboard'">
+        Back to Dashboard
+    </button>
+
+
+    <script>
+
+        function generateQR() {
+
+            const studentId =
+                document.getElementById("studentId").value.trim();
+
+            if (studentId === "") {
+                alert("Please enter Student ID");
+                return;
+            }
+
+            document.getElementById("qrcode").innerHTML = "";
+
+            new QRCode(
+                document.getElementById("qrcode"),
+                {
+                    text: studentId,
+                    width: 256,
+                    height: 256
+                }
+            );
+        }
+
+    </script>
+
+</body>
+</html>

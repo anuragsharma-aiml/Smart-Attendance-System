@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <div class="logo"> 🎓</div>
+            <h1>Student Dashboard</h1>
+            <p class="subtitle"> Weicome to Smart Attendance System</p>
+            <div class="student-info">
+                <p> <strong>student ID</strong> STU001</p>
+                <p><strong>Class</strong> B.Tech CSE AI&ML -2nd Year </p>
+            </div>
+            <button onclick="window.location.href='/scan-qr'"> 📷Scan QR Code</button>
+            <button onclick="window.location.href='/my-attendance'">📊 My attendance</button>
+            <button type="button" onclick="window.location.href='/logout'">🚪Logout</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static',filename='script.js') }}"></script>
+</body>
+</html>

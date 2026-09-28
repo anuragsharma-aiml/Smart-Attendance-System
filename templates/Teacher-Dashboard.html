@@ -1,0 +1,49 @@
+ <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teacher Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="login-box">
+
+            <div class="logo">📊</div>
+
+            <h1>Teacher Dashboard</h1>
+
+            <p class="subtitle">
+                Welcome to Smart Attendance System
+            </p>
+
+            <button onclick="window.location.href='/generate-qr'">
+                📱 Generate QR Code
+            </button>
+
+            <button onclick="window.location.href='/teacher-attendance'">
+                📋 View Attendance
+            </button>
+
+            <button onclick="window.location.href='/attendance-report'">
+                📄 Attendance Report
+            </button>
+
+            <button class="back-button" onclick="window.location.href='/logout'">
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

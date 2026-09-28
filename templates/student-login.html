@@ -1,0 +1,107 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Smart Attendance</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="login-box">
+
+            <div class="logo">👨‍🎓</div>
+
+            <h1>Student Login</h1>
+
+            <p class="subtitle">Login to mark your attendance</p>
+
+            <form id="studentLoginForm">
+
+                <input
+                    type="text"
+                    id="studentId"
+                    placeholder="Enter Student ID / Roll Number"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="studentPassword"
+                    placeholder="Enter password"
+                    required
+                >
+
+                <button type="submit">
+                    Login
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        document.getElementById("studentLoginForm").addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const studentId = document.getElementById("studentId").value.trim();
+            const password = document.getElementById("studentPassword").value;
+
+            if (!studentId || !password) {
+                alert("Please enter Student ID and Password");
+                return;
+            }
+
+            try {
+
+                const response = await fetch("/student-login", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        password: password
+                    })
+
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+
+                    localStorage.setItem("studentId", result.student_id);
+                    localStorage.setItem("studentName", result.name);
+
+                    window.location.href = "/student-dashboard";
+
+                } else {
+
+                    alert(result.message);
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+                alert("Backend is not connected.");
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
