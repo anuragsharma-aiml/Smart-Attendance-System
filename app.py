@@ -368,14 +368,16 @@ def attendance_report():
     )
 
 
-# ==================== LOGOUT ====================
-
 @app.route("/logout")
 def logout():
-
     session.clear()
-
     return redirect("/")
+
+
+@app.route("/teacher-logout")
+def teacher_logout():
+    session.clear()
+    return redirect("/teacher-login")
 
 
 # ==================== START SERVER ====================
