@@ -67,6 +67,7 @@ Smart-Attendance-System/
 
 
 git clone https://github.com/anuragsharma-aiml/Smart-Attendance-System.git
+
 cd Smart-Attendance-System
 
 ### 2. Create a virtual environment
