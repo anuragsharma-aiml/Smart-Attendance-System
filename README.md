@@ -59,14 +59,13 @@ Smart-Attendance-System/
 ├── README.md
 └── .gitignore
 
-## 🚀 How to Run
+ ## 🚀 How to Run
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/anuragsharma-aiml/Smart-Attendance-System.git
 cd Smart-Attendance-System
-```
 
 ### 2. Create a virtual environment
 
