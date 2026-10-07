@@ -13,8 +13,6 @@ app.secret_key = os.environ.get(
 # DATABASE PATH
 # ============================================================
 
-# Vercel पर normal project folder में write नहीं कर सकते।
-# इसलिए Vercel पर /tmp इस्तेमाल करेंगे।
 if os.environ.get("VERCEL"):
     DB_PATH = "/tmp/attendance.db"
 else:
@@ -440,8 +438,8 @@ def teacher_dashboard():
 
         return redirect("/teacher-login")
 
-    return render_template("teacher-Dashboard.html")
-
+    return render_template("Teacher-Dashboard.html")
+ 
 
 # ============================================================
 # TEACHER ATTENDANCE
@@ -602,3 +600,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000))
     )
+
