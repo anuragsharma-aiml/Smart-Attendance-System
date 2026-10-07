@@ -88,7 +88,7 @@ venv\Scripts\Activate.ps1
 ### 4. Install required packages
 
 ```bash
-pip install flask
+pip install -r requirements.txt
 ```
 
 ### 5. Run the application
