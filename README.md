@@ -1,6 +1,46 @@
- # Smart Attendance System
+ # 📚 Smart Attendance System
 
-A QR code-based Smart Attendance Management System built with Python, Flask, SQLite, HTML, CSS and JavaScript.
+> A QR code-based Smart Attendance Management System built with Python, Flask, SQLite, HTML, CSS and JavaScript.
+
+A web-based attendance management application that allows teachers to generate QR codes and students to scan them to mark attendance quickly and efficiently.
+
+## 🎯 System Workflow
+
+### 👨‍🏫 Teacher Workflow
+
+Teacher Login  
+↓  
+Teacher Dashboard  
+↓  
+Generate QR Code  
+↓  
+View Attendance  
+↓  
+Attendance Report
+
+### 👨‍🎓 Student Workflow
+
+Student Login  
+↓  
+Student Dashboard  
+↓  
+Scan QR Code  
+↓  
+Attendance Marked  
+↓  
+My Attendance
+
+## ✨ Key Highlights
+
+- 📱 Separate Student and Teacher Dashboards
+- 🔐 Session-based Login and Logout
+- 📷 QR Code Generation and Scanning
+- ✅ Automatic Attendance Marking
+- 📊 Student Attendance Records
+- 📋 Teacher Attendance Dashboard
+- 📈 Attendance Reports
+- 🗄️ SQLite Database
+- 🌐 Web-based Interface
 
 ## 📌 Overview
 
