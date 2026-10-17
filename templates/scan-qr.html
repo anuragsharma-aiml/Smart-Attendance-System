@@ -1,117 +1,115 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Scan QR - Smart Attendance</title>
+    <title>Scan QR | Smart Attendance</title>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-
-        h1 {
-            margin-bottom: 10px;
-        }
-
-        #reader {
-            width: 100%;
-            max-width: 500px;
-            margin: 20px auto;
-        }
-
-        #result {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        button {
-            padding: 10px 20px;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-    <h1>📷 Scan QR Code</h1>
+    <main class="dashboard-page">
+        <section class="scan-card">
 
-    <p>Show the student's QR code in front of the camera.</p>
+            <div class="dashboard-logo">📷</div>
 
-    <div id="reader"></div>
+            <div class="dashboard-title">
+                <h1>Scan QR Code</h1>
+                <p>Scan the QR code to mark your attendance</p>
+            </div>
 
-    <div id="result">
-        Waiting for QR scan...
-    </div>
+            <div class="scanner-container">
+                <div id="reader"></div>
 
-    <button onclick="window.location.href='/student-dashboard'">
-        Back to Dashboard
-    </button>
+                <p class="scanner-hint">
+                    📱 Allow camera access and place the QR code
+                    inside the scanning area.
+                </p>
+            </div>
 
+            <div id="result" class="scan-result">
+                Waiting for QR scan...
+            </div>
+
+            <button
+                class="back-dashboard-button"
+                onclick="window.location.href='/student-dashboard'">
+                ← Back to Dashboard
+            </button>
+
+        </section>
+    </main>
 
     <script>
+        let scanProcessing = false;
 
         function onScanSuccess(decodedText, decodedResult) {
+            if (scanProcessing) return;
 
-            document.getElementById("result").innerText =
-                "QR detected: " + decodedText;
+            const result = document.getElementById("result");
+            let qrData;
 
-            console.log("QR Code:", decodedText);
+            try {
+                qrData = JSON.parse(decodedText);
+            } catch (error) {
+                result.className = "scan-result error";
+                result.innerText =
+                    "❌ Invalid QR format. Please use the teacher-generated QR.";
+                return;
+            }
 
-            html5QrcodeScanner.clear();
+            if (!qrData.student_id || !qrData.subject) {
+                result.className = "scan-result error";
+                result.innerText =
+                    "❌ Student ID or Subject is missing from the QR.";
+                return;
+            }
+
+            scanProcessing = true;
+            result.className = "scan-result scanning";
+            result.innerText = "QR detected. Marking attendance...";
+
+            html5QrcodeScanner.clear()
+                .catch(error => console.log("Scanner stop:", error));
 
             fetch("/mark-attendance", {
                 method: "POST",
-
                 headers: {
                     "Content-Type": "application/json"
                 },
-
                 body: JSON.stringify({
-                    student_id: decodedText
+                    student_id: qrData.student_id,
+                    subject: qrData.subject
                 })
             })
-
             .then(response => response.json())
-
             .then(data => {
-
                 if (data.success) {
-
-                    document.getElementById("result").innerText =
-                        "✅ Attendance marked successfully!";
-
+                    result.className = "scan-result success";
+                    result.innerText = "✅ " + data.message;
                 } else {
-
-                    document.getElementById("result").innerText =
-                        "❌ " + data.message;
-
+                    result.className = "scan-result error";
+                    result.innerText = "❌ " + data.message;
                 }
-
             })
-
             .catch(error => {
-
-                console.error(error);
-
-                document.getElementById("result").innerText =
-                    "❌ Server error.";
-
+                console.error("Attendance error:", error);
+                result.className = "scan-result error";
+                result.innerText =
+                    "❌ Server error. Please try again.";
             });
         }
 
-
         function onScanFailure(error) {
-            // QR not detected yet
+            // QR not detected yet.
         }
-
 
         const html5QrcodeScanner = new Html5QrcodeScanner(
             "reader",
@@ -120,17 +118,16 @@
                 qrbox: {
                     width: 250,
                     height: 250
-                }
+                },
+                rememberLastUsedCamera: true
             },
             false
         );
-
 
         html5QrcodeScanner.render(
             onScanSuccess,
             onScanFailure
         );
-
     </script>
 
 </body>

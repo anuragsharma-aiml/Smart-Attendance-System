@@ -3,135 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Attendance | Smart Attendance</title>
 
-    <title>My Attendance</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
+        .attendance-page {
+            width: min(900px, 94%);
+            margin: 35px auto;
         }
 
-        h1 {
-            text-align: center;
+        .attendance-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow-x: auto;
         }
 
-        table {
+        .attendance-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 25px;
+            margin-top: 20px;
         }
 
-        th, td {
-            border: 1px solid #ccc;
+        .attendance-table th,
+        .attendance-table td {
             padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
             text-align: center;
         }
 
-        th {
-            background: #f2f2f2;
+        .attendance-table th {
+            background: #f3f4f6;
         }
 
-        button {
-            padding: 10px 20px;
+        .back-button {
             margin-top: 20px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
         }
     </style>
 </head>
 
 <body>
+    <main class="attendance-page">
+        <section class="attendance-card">
+            <h1>📊 My Attendance</h1>
 
-    <h1>📊 My Attendance</h1>
+            <p>
+                Student ID:
+                <strong>{{ student_id }}</strong>
+            </p>
 
-    <p>
-        Student ID:
-        <strong id="studentId">Loading...</strong>
-    </p>
+            {% if error %}
+                <p>{{ error }}</p>
+            {% endif %}
 
-    <table>
-        <thead>
-            <tr>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
-            </tr>
-        </thead>
+            <table class="attendance-table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
 
-        <tbody id="attendanceTable">
-            <tr>
-                <td colspan="4">Loading attendance...</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <button onclick="window.location.href='/student-dashboard'">
-        Back to Dashboard
-    </button>
-
-
-    <script>
-
-        const studentId = localStorage.getItem("studentId");
-
-        document.getElementById("studentId").innerText =
-            studentId || "Not found";
-
-
-        if (!studentId) {
-
-            document.getElementById("attendanceTable").innerHTML =
-                "<tr><td colspan='4'>Student ID not found. Please login again.</td></tr>";
-
-        } else {
-
-            fetch("/api/attendance/" + studentId)
-
-                .then(response => response.json())
-
-                .then(data => {
-
-                    const table =
-                        document.getElementById("attendanceTable");
-
-                    table.innerHTML = "";
-
-                    if (data.length === 0) {
-
-                        table.innerHTML =
-                            "<tr><td colspan='4'>No attendance records found.</td></tr>";
-
-                        return;
-                    }
-
-                    data.forEach(record => {
-
-                        const row = `
+                <tbody>
+                    {% if attendance_records %}
+                        {% for record in attendance_records %}
                             <tr>
-                                <td>${record.subject}</td>
-                                <td>${record.date}</td>
-                                <td>${record.time}</td>
-                                <td>${record.status}</td>
+                                <td>{{ record.subject or 'QR Attendance' }}</td>
+                                <td>{{ record.date or '-' }}</td>
+                                <td>{{ record.time or '-' }}</td>
+                                <td>{{ record.status or 'Present' }}</td>
                             </tr>
-                        `;
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No attendance records found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
 
-                        table.innerHTML += row;
-                    });
-
-                })
-
-                .catch(error => {
-
-                    console.error(error);
-
-                    document.getElementById("attendanceTable").innerHTML =
-                        "<tr><td colspan='4'>Unable to load attendance.</td></tr>";
-
-                });
-        }
-
-    </script>
-
+            <button class="back-button"
+                    onclick="window.location.href='/student-dashboard'">
+                ← Back to Dashboard
+            </button>
+        </section>
+    </main>
 </body>
 </html>
+```

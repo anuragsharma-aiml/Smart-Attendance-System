@@ -60,29 +60,27 @@
 
         <tbody>
 
-            {% if records %}
+            
+{% if records %}
 
-                {% for record in records %}
+    {% for record in records %}
+    <tr>
+        <td>{{ record['student_id'] }}</td>
+        <td>{{ record['subject'] }}</td>
+        <td>{{ record['date'] }}</td>
+        <td>{{ record['time'] }}</td>
+        <td>{{ record['status'] }}</td>
+    </tr>
+    {% endfor %}
 
-                <tr>
-                    <td>{{ record[0] }}</td>
-                    <td>{{ record[1] }}</td>
-                    <td>{{ record[2] }}</td>
-                    <td>{{ record[3] }}</td>
-                    <td>{{ record[4] }}</td>
-                </tr>
+{% else %}
 
-                {% endfor %}
+    <tr>
+        <td colspan="5">No attendance records found.</td>
+    </tr>
 
-            {% else %}
+{% endif %}
 
-                <tr>
-                    <td colspan="5">
-                        No attendance records found.
-                    </td>
-                </tr>
-
-            {% endif %}
 
         </tbody>
 

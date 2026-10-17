@@ -1,26 +1,152 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+
+    <title>Student Dashboard | Smart Attendance</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-    <div class="container">
-        <div class="login-box">
-            <div class="logo"> 🎓</div>
-            <h1>Student Dashboard</h1>
-            <p class="subtitle"> Weicome to Smart Attendance System</p>
-            <div class="student-info">
-                <p> <strong>student ID</strong> STU001</p>
-                <p><strong>Class</strong> B.Tech CSE AI&ML -2nd Year </p>
+
+    <main class="dashboard-page">
+
+        <section class="dashboard-card">
+        
+<!-- Recent Attendance -->
+            <!-- Logo -->
+            <div class="dashboard-logo">
+                🎓
             </div>
-            <button onclick="window.location.href='/scan-qr'"> 📷Scan QR Code</button>
-            <button onclick="window.location.href='/my-attendance'">📊 My attendance</button>
-            <button type="button" onclick="window.location.href='/logout'">🚪Logout</button>
-        </div>
-    </div>
-    <script src="{{ url_for('static',filename='script.js') }}"></script>
+
+
+            <!-- Title -->
+            <div class="dashboard-title">
+
+                <h1>Student Dashboard</h1>
+
+                <p>
+                    Welcome to Smart Attendance System
+                </p>
+
+            </div>
+
+
+            <!-- Student Information -->
+            <div class="student-info-card">
+
+                <div class="student-info-row">
+
+                    <span class="info-label">
+                        Student ID
+                    </span>
+
+                    <strong id="dashboardStudentId">
+                        STU001
+                    </strong>
+
+                </div>
+
+
+                <div class="student-info-row">
+
+                    <span class="info-label">
+                        Class
+                    </span>
+
+                    <strong id="dashboardStudentClass">
+                        B.Tech CSE AI&ML - 2nd Year
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- Dashboard Options -->
+            <div class="dashboard-options">
+
+                <button
+                    class="dashboard-button"
+                    onclick="window.location.href='/scan-qr'">
+
+                    <span class="button-icon">
+                        📷
+                    </span>
+
+                    <span class="button-content">
+
+                        <strong>
+                            Scan QR Code
+                        </strong>
+
+                        <small>
+                            Scan the teacher's QR to mark attendance
+                        </small>
+
+                    </span>
+
+                    <span class="button-arrow">
+                        ›
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="dashboard-button"
+                    onclick="window.location.href='/my-attendance'">
+
+                    <span class="button-icon">
+                        📊
+                    </span>
+
+                    <span class="button-content">
+
+                        <strong>
+                            My Attendance
+                        </strong>
+
+                        <small>
+                            View your attendance records
+                        </small>
+
+                    </span>
+
+                    <span class="button-arrow">
+                        ›
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- Logout -->
+            <button
+                class="logout-button"
+                onclick="window.location.href='/logout'">
+
+                🚪 Logout
+
+            </button>
+
+
+            <div class="dashboard-footer">
+                Smart Attendance Management System
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
+
 </html>

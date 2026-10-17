@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 attendance.db
 .env
+cloudflared.exe.exe
+config.yml

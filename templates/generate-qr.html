@@ -1,91 +1,201 @@
- <!DOCTYPE html>
+ 
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Generate QR - Smart Attendance</title>
+    <title>Generate QR | Smart Attendance</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 30px;
+        .qr-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
         }
 
-        input {
-            padding: 12px;
-            width: 250px;
-            margin: 10px;
+        .qr-form label {
+            display: block;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 8px;
+            margin-bottom: 0;
         }
 
-        button {
-            padding: 12px 20px;
-            margin: 10px;
+        .qr-form input,
+        .qr-form select {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 52px;
+            padding: 14px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: 500;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .qr-form input:focus,
+        .qr-form select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .qr-form select {
             cursor: pointer;
         }
 
+        .qr-form .generate-button {
+            width: 100%;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .qr-container {
+            margin-top: 24px;
+        }
+
         #qrcode {
-            margin: 25px auto;
-            width: 256px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 16px auto;
+        }
+
+        #qrcode img,
+        #qrcode canvas {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Generate Student QR</h1>
+    <main class="dashboard-page">
 
-    <p>Enter Student ID</p>
+        <section class="qr-card">
 
-    <input
-        type="text"
-        id="studentId"
-        placeholder="Enter Student ID"
-        value="STU001"
-    >
+            <!-- Header -->
+            <div class="dashboard-logo">
+                📱
+            </div>
 
-    <br>
+            <div class="dashboard-title">
+                <h1>Generate QR Code</h1>
+                <p>Create a QR code for student attendance</p>
+            </div>
 
-    <button onclick="generateQR()">
-        Generate QR
-    </button>
+            <!-- QR Form -->
+            <div class="qr-form">
 
-    <div id="qrcode"></div>
+                <label for="studentId">Student ID</label>
 
-    <br>
+                <input
+                    type="text"
+                    id="studentId"
+                    placeholder="Enter Student ID"
+                    value="STU001"
+                    autocomplete="off"
+                    required
+                >
 
-    <button onclick="window.location.href='/teacher-dashboard'">
-        Back to Dashboard
-    </button>
+                <label for="subject">Subject</label>
 
+                <select id="subject" required>
+                    <option value="">Select Subject</option>
+                    <option value="DSTL">DSTL</option>
+                    <option value="Digital Electronics">Digital Electronics</option>
+                    <option value="Data Structures">Data Structures</option>
+                    <option value="Computer Organization">Computer Organization</option>
+                    <option value="Python Programming">Python Programming</option>
+                    <option value="UHPVE">UHPVE</option>
+                </select>
+
+                <button
+                    type="button"
+                    class="generate-button"
+                    onclick="generateQR()">
+                    📱 Generate QR Code
+                </button>
+
+            </div>
+
+            <!-- QR Area -->
+            <div id="qrContainer" class="qr-container">
+
+                <div id="qrcode"></div>
+
+                <p id="qrNote">
+                    Enter a Student ID and generate the QR code.
+                </p>
+
+            </div>
+
+            <!-- Back -->
+            <button
+                type="button"
+                class="back-dashboard-button"
+                onclick="window.location.href='/teacher-dashboard'">
+                ← Back to Dashboard
+            </button>
+
+        </section>
+
+    </main>
 
     <script>
-
         function generateQR() {
+            const studentId = document.getElementById("studentId").value.trim();
+            const subject = document.getElementById("subject").value.trim();
 
-            const studentId =
-                document.getElementById("studentId").value.trim();
+            const qrCode = document.getElementById("qrcode");
+            const qrNote = document.getElementById("qrNote");
 
             if (studentId === "") {
-                alert("Please enter Student ID");
+                alert("Please enter Student ID.");
                 return;
             }
 
-            document.getElementById("qrcode").innerHTML = "";
+            if (subject === "") {
+                alert("Please select a subject.");
+                return;
+            }
 
-            new QRCode(
-                document.getElementById("qrcode"),
-                {
-                    text: studentId,
-                    width: 256,
-                    height: 256
-                }
-            );
+            if (typeof QRCode === "undefined") {
+                alert("QR library could not load. Please check your internet connection and refresh the page.");
+                return;
+            }
+
+            qrCode.innerHTML = "";
+
+            const qrData = JSON.stringify({
+                student_id: studentId,
+                subject: subject
+            });
+
+            new QRCode(qrCode, {
+                text: qrData,
+                width: 256,
+                height: 256
+            });
+
+            qrNote.textContent =
+                "QR generated for Student ID: " + studentId +
+                " | Subject: " + subject;
         }
-
     </script>
 
 </body>

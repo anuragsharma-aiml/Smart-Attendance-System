@@ -5,44 +5,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Teacher Dashboard</title>
+    <title>Teacher Dashboard | Smart Attendance</title>
 
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-    <div class="container">
+    <main class="dashboard-page">
 
-        <div class="login-box">
+        <section class="dashboard-card">
 
-            <div class="logo">📊</div>
+            <!-- Logo -->
+            <div class="dashboard-logo">
+                📊
+            </div>
 
-            <h1>Teacher Dashboard</h1>
+            <!-- Title -->
+            <div class="dashboard-title">
+                <h1>Teacher Dashboard</h1>
 
-            <p class="subtitle">
-                Welcome to Smart Attendance System
-            </p>
+                <p>
+                    Manage attendance and student records
+                </p>
+            </div>
 
-            <button onclick="window.location.href='/generate-qr'">
-                📱 Generate QR Code
-            </button>
 
-            <button onclick="window.location.href='/teacher-attendance'">
-                📋 View Attendance
-            </button>
+            <!-- Dashboard Options -->
+            <div class="dashboard-options">
 
-            <button onclick="window.location.href='/attendance-report'">
-                📄 Attendance Report
-            </button>
+                <button
+                    class="dashboard-button"
+                    onclick="window.location.href='/generate-qr'">
 
-            <button class="back-button" onclick="window.location.href='/teacher-logout'">
+                    <span class="button-icon">📱</span>
+
+                    <span class="button-content">
+                        <strong>Generate QR Code</strong>
+                        <small>Create attendance QR for students</small>
+                    </span>
+
+                    <span class="button-arrow">›</span>
+
+                </button>
+
+
+                <button
+                    class="dashboard-button"
+                    onclick="window.location.href='/teacher-attendance'">
+
+                    <span class="button-icon">📋</span>
+
+                    <span class="button-content">
+                        <strong>View Attendance</strong>
+                        <small>View student attendance records</small>
+                    </span>
+
+                    <span class="button-arrow">›</span>
+
+                </button>
+
+
+                <button
+                    class="dashboard-button"
+                    onclick="window.location.href='/attendance-report'">
+
+                    <span class="button-icon">📄</span>
+
+                    <span class="button-content">
+                        <strong>Attendance Report</strong>
+                        <small>Check attendance summary and reports</small>
+                    </span>
+
+                    <span class="button-arrow">›</span>
+
+                </button>
+
+            </div>
+
+
+            <!-- Logout -->
+            <button
+                class="logout-button"
+                onclick="window.location.href='/teacher-logout'">
+
                 Logout
+
             </button>
 
-        </div>
 
-    </div>
+            <div class="dashboard-footer">
+                Smart Attendance Management System
+            </div>
+
+        </section>
+
+    </main>
 
 </body>
 

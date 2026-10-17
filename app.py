@@ -1,412 +1,326 @@
+
 from flask import Flask, request, render_template, redirect, session
-import sqlite3
 from datetime import datetime
+from supabase import create_client
+from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = os.environ.get(
-    "SECRET_KEY",
-    "smart-attendance-secret-key"
-)
+app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key")
 
-# ============================================================
-# DATABASE PATH
-# ============================================================
+# SUPABASE CONNECTION
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 
-if os.environ.get("VERCEL"):
-    DB_PATH = "/tmp/attendance.db"
-else:
-    DB_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "attendance.db"
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError(
+        "SUPABASE_URL or SUPABASE_KEY is missing. Check your .env file."
     )
 
-
-# ============================================================
-# DATABASE CONNECTION
-# ============================================================
-
-def get_connection():
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+print("SUPABASE URL:", SUPABASE_URL)
+print("KEY PREFIX:", SUPABASE_KEY[:15])
 
 
-# ============================================================
-# CREATE DATABASE
-# ============================================================
-
-def create_database():
-
-    connection = get_connection()
-    cursor = connection.cursor()
-
-    # Students table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS students (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id TEXT UNIQUE NOT NULL,
-            name TEXT NOT NULL,
-            class_name TEXT NOT NULL,
-            password TEXT NOT NULL DEFAULT '12345'
-        )
-    """)
-
-    # Attendance table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id TEXT NOT NULL,
-            subject TEXT NOT NULL,
-            date TEXT NOT NULL,
-            time TEXT NOT NULL,
-            status TEXT NOT NULL
-        )
-    """)
-
-    connection.commit()
-    connection.close()
-
-
-# ============================================================
-# PASSWORD COLUMN
-# ============================================================
-
-def add_password_column():
-
-    connection = get_connection()
-    cursor = connection.cursor()
-
-    try:
-        cursor.execute("""
-            ALTER TABLE students
-            ADD COLUMN password TEXT NOT NULL DEFAULT '12345'
-        """)
-
-        connection.commit()
-        print("Password column added successfully!")
-
-    except sqlite3.OperationalError:
-        # Column already exists
-        pass
-
-    connection.close()
-
-
-# ============================================================
-# TEST STUDENT
-# ============================================================
-
-def add_test_student():
-
-    connection = get_connection()
-    cursor = connection.cursor()
-
-    try:
-
-        cursor.execute("""
-            INSERT INTO students
-            (student_id, name, class_name, password)
-            VALUES (?, ?, ?, ?)
-        """, (
-            "STU001",
-            "Anurag",
-            "B.Tech CSE AI & ML - 2nd Year",
-            "12345"
-        ))
-
-        connection.commit()
-
-        print("Test student added successfully!")
-
-    except sqlite3.IntegrityError:
-
-        print("Test student already exists.")
-
-    connection.close()
-
-
-# ============================================================
-# DATABASE INITIALIZATION
-# ============================================================
-
-try:
-
-    create_database()
-    add_password_column()
-    add_test_student()
-
-    print("Database initialized successfully.")
-    print("Database:", DB_PATH)
-
-except Exception as error:
-
-    print("DATABASE ERROR:", error)
-
-
-# ============================================================
 # HOME / STUDENT LOGIN
-# ============================================================
-
 @app.route("/")
 def home():
-
     return render_template("student-login.html")
 
 
-# ============================================================
 # STUDENT LOGIN
-# ============================================================
-
 @app.route("/student-login", methods=["POST"])
 def student_login():
-
     try:
-
-        data = request.get_json(silent=True) or {}
-
-        student_id = data.get("student_id")
-        password = data.get("password")
+        data = request.get_json(silent=True) or request.form
+        student_id = (data.get("student_id") or "").strip()
+        password = data.get("password") or ""
 
         if not student_id or not password:
-
             return {
                 "success": False,
                 "message": "Student ID and Password are required"
-            }
+            }, 400
 
-        connection = get_connection()
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            SELECT student_id, name, class_name, password
-            FROM students
-            WHERE student_id = ?
-        """, (student_id,))
-
-        student = cursor.fetchone()
-
-        connection.close()
-
-        if student and student["password"] == password:
-
-            return {
-                "success": True,
-                "student_id": student["student_id"],
-                "name": student["name"],
-                "class_name": student["class_name"]
-            }
-
-        return {
-            "success": False,
-            "message": "Invalid Student ID or Password"
-        }
-
-    except Exception as error:
-
-        print("STUDENT LOGIN ERROR:", error)
-
-        return {
-            "success": False,
-            "message": "Server error occurred"
-        }, 500
-
-
-# ============================================================
-# STUDENT DASHBOARD
-# ============================================================
-
-@app.route("/student-dashboard")
-def student_dashboard():
-
-    return render_template("student-dashboard.html")
-
-
-# ============================================================
-# GENERATE QR
-# ============================================================
-
-@app.route("/generate-qr")
-def generate_qr():
-
-    return render_template("generate-qr.html")
-
-
-# ============================================================
-# SCAN QR
-# ============================================================
-
-@app.route("/scan-qr")
-def scan_qr():
-
-    return render_template("scan-qr.html")
-
-
-# ============================================================
-# MARK ATTENDANCE
-# ============================================================
-
-@app.route("/mark-attendance", methods=["POST"])
-def mark_attendance():
-
-    try:
-
-        data = request.get_json(silent=True) or {}
-
-        student_id = data.get("student_id")
-
-        if not student_id:
-
-            return {
-                "success": False,
-                "message": "Student ID not found"
-            }
-
-        connection = get_connection()
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            SELECT student_id
-            FROM students
-            WHERE student_id = ?
-            """,
-            (student_id,)
+        result = (
+            supabase.table("students")
+            .select("student_id, name, class_name, password")
+            .eq("student_id", student_id)
+            .limit(1)
+            .execute()
         )
 
-        student = cursor.fetchone()
+        student = result.data[0] if result.data else None
 
-        if not student:
-
-            connection.close()
-
+        if not student or str(student.get("password") or "") != str(password):
             return {
                 "success": False,
-                "message": "Student not found"
-            }
+                "message": "Invalid Student ID or Password"
+            }, 401
 
-        now = datetime.now()
-
-        date = now.strftime("%Y-%m-%d")
-        time = now.strftime("%H:%M:%S")
-
-        subject = "QR Attendance"
-        status = "Present"
-
-        cursor.execute("""
-            INSERT INTO attendance
-            (student_id, subject, date, time, status)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            student_id,
-            subject,
-            date,
-            time,
-            status
-        ))
-
-        connection.commit()
-        connection.close()
+        session.clear()
+        session["student_id"] = student["student_id"]
+        session["student_name"] = student.get("name", "")
+        session["student_class"] = student.get("class_name", "")
 
         return {
             "success": True,
-            "message": "Attendance marked successfully"
+            "student_id": student["student_id"],
+            "name": student.get("name", ""),
+            "class_name": student.get("class_name", "")
         }
 
-    except Exception as error:
-
-        print("ATTENDANCE ERROR:", error)
-
+    except Exception:
+        app.logger.exception("STUDENT LOGIN ERROR")
         return {
             "success": False,
-            "message": "Unable to mark attendance"
+            "message": "Student login failed. Check Supabase settings."
         }, 500
 
 
-# ============================================================
-# MY ATTENDANCE
-# ============================================================
+# STUDENT DASHBOARD
+@app.route("/student-dashboard")
+def student_dashboard():
+    if not session.get("student_id"):
+        return redirect("/")
 
-@app.route("/my-attendance")
-def my_attendance():
-
-    return render_template("my-attendance.html")
-
-
-# ============================================================
-# ATTENDANCE API
-# ============================================================
-
-@app.route("/api/attendance/<student_id>")
-def get_attendance(student_id):
+    student_id = session.get("student_id")
+    print("DASHBOARD STUDENT ID:", repr(student_id))
 
     try:
+        response = (
+            supabase.table("attendance")
+            .select("*")
+            .eq("student_id", student_id)
+            .order("id", desc=True)
+            .execute()
+        )
 
-        connection = get_connection()
-        cursor = connection.cursor()
+        attendance_records = response.data or []
+        print("DASHBOARD ATTENDANCE RECORDS:", attendance_records)
 
-        cursor.execute("""
-            SELECT subject, date, time, status
-            FROM attendance
-            WHERE student_id = ?
-            ORDER BY date DESC, time DESC
-        """, (student_id,))
+        return render_template(
+            "student-dashboard.html",
+            attendance_records=attendance_records
+        )
 
-        records = cursor.fetchall()
+    except Exception as e:
+        app.logger.exception("STUDENT DASHBOARD ERROR")
+        return render_template(
+            "student-dashboard.html",
+            attendance_records=[],
+            error="Attendance load nahi ho pa rahi. Please refresh karein."
+        )
 
-        connection.close()
 
-        attendance = []
+# GENERATE QR PAGE
+@app.route("/generate-qr")
+def generate_qr():
+    if not session.get("teacher_logged_in"):
+        return redirect("/teacher-login")
+    return render_template("generate-qr.html")
 
-        for record in records:
 
-            attendance.append({
-                "subject": record["subject"],
-                "date": record["date"],
-                "time": record["time"],
-                "status": record["status"]
-            })
+# SCAN QR PAGE
+@app.route("/scan-qr")
+def scan_qr():
+    if not session.get("student_id"):
+        return redirect("/")
+    return render_template("scan-qr.html")
 
-        return attendance
 
-    except Exception as error:
+# MARK ATTENDANCE
+@app.route("/mark-attendance", methods=["POST"])
+def mark_attendance():
+    try:
+        logged_in_student = session.get("student_id")
 
-        print("ATTENDANCE FETCH ERROR:", error)
+        if not logged_in_student:
+            return {
+                "success": False,
+                "message": "Please log in as a student first."
+            }, 401
+
+        data = request.get_json(silent=True) or {}
+        qr_student_id = (data.get("student_id") or "").strip()
+
+        if qr_student_id and qr_student_id != logged_in_student:
+            return {
+                "success": False,
+                "message": "QR Student ID does not match your login."
+            }, 403
+
+        student_id = logged_in_student
+        subject = (data.get("subject") or "QR Attendance").strip()
+
+        if not subject:
+            subject = "QR Attendance"
+
+        student_result = (
+            supabase.table("students")
+            .select("student_id")
+            .eq("student_id", student_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not student_result.data:
+            return {
+                "success": False,
+                "message": "Student not found."
+            }, 404
+
+        now = datetime.now()
+        today = now.strftime("%Y-%m-%d")
+
+        existing = (
+            supabase.table("attendance")
+            .select("id")
+            .eq("student_id", student_id)
+            .eq("subject", subject)
+            .eq("date", today)
+            .limit(1)
+            .execute()
+        )
+
+        if existing.data:
+            return {
+                "success": False,
+                "message": "Attendance is already marked for this subject today."
+            }, 409
+
+        attendance_data = {
+            "student_id": student_id,
+            "subject": subject,
+            "date": today,
+            "time": now.strftime("%H:%M:%S"),
+            "status": "Present"
+        }
+
+        try:
+            supabase.table("attendance").insert(
+                attendance_data,
+                returning="minimal"
+            ).execute()
+
+        except Exception as insert_error:
+            error_text = str(insert_error)
+
+            if (
+                "23505" in error_text
+                or "attendance_one_per_student_subject_date" in error_text
+            ):
+                return {
+                    "success": False,
+                    "message": "Attendance is already marked for this subject today."
+                }, 409
+
+            raise
+
+        app.logger.info(
+            "Attendance marked for student %s, subject %s, date %s",
+            student_id, subject, today
+        )
 
         return {
+            "success": True,
+            "message": "Attendance marked successfully."
+        }, 200
+
+    except Exception:
+        app.logger.exception("ATTENDANCE ERROR")
+        return {
             "success": False,
-            "message": "Unable to fetch attendance"
+            "message": "Unable to mark attendance. Please try again."
+        }, 500
+
+      
+# MY ATTENDANCE PAGE
+@app.route("/my-attendance")
+def my_attendance():
+    if not session.get("student_id"):
+        return redirect("/")
+
+    student_id = session.get("student_id")
+
+    try:
+        response = (
+            supabase.table("attendance")
+            .select("*")
+            .eq("student_id", student_id)
+            .order("id", desc=True)
+            .execute()
+        )
+
+        attendance_records = response.data or []
+        print("LOGGED-IN STUDENT:", repr(student_id))
+        print("ATTENDANCE RECORDS FROM SUPABASE:", attendance_records)
+
+        return render_template(
+            "my-attendance.html",
+            student_id=student_id,
+            attendance_records=attendance_records
+        )
+
+    except Exception:
+        app.logger.exception("MY ATTENDANCE ERROR")
+        return render_template(
+            "my-attendance.html",
+            student_id=student_id,
+            attendance_records=[],
+            error="Attendance load nahi ho pa rahi. Please try again."
+        )
+
+
+# STUDENT ATTENDANCE API
+@app.route("/api/attendance/<student_id>")
+def get_attendance(student_id):
+    try:
+        # Students can view only their own attendance
+        if session.get("student_id") != student_id:
+            return {"success": False, "message": "Unauthorized"}, 403
+
+        result = (
+            supabase.table("attendance")
+            .select("subject, date, time, status")
+            .eq("student_id", student_id)
+            .order("date", desc=True)
+            .order("time", desc=True)
+            .execute()
+        )
+
+        return result.data
+
+    except Exception:
+        app.logger.exception("ATTENDANCE FETCH ERROR")
+        return {
+            "success": False,
+            "message": "Unable to fetch attendance."
         }, 500
 
 
-# ============================================================
 # TEACHER LOGIN PAGE
-# ============================================================
-
 @app.route("/teacher-login", methods=["GET"])
 def teacher_login_page():
-
     return render_template("teacher-login.html")
 
 
-# ============================================================
-# TEACHER LOGIN
-# ============================================================
-
+# TEACHER LOGIN API
 @app.route("/teacher-login", methods=["POST"])
 def teacher_login():
-
     try:
+        data = request.get_json(silent=True) or request.form
+        email = (data.get("email") or "").strip()
+        password = data.get("password") or ""
 
-        data = request.get_json(silent=True) or {}
+        teacher_email = os.environ.get("TEACHER_EMAIL", "teacher@gmail.com")
+        teacher_password = os.environ.get("TEACHER_PASSWORD", "12345")
 
-        email = data.get("email")
-        password = data.get("password")
-
-        if email == "teacher@gmail.com" and password == "12345":
-
+        if email == teacher_email and password == teacher_password:
+            session.clear()
             session["teacher_logged_in"] = True
-
             return {
                 "success": True,
                 "message": "Teacher login successful"
@@ -415,189 +329,125 @@ def teacher_login():
         return {
             "success": False,
             "message": "Invalid Teacher Email or Password"
-        }
+        }, 401
 
-    except Exception as error:
-
-        print("TEACHER LOGIN ERROR:", error)
-
+    except Exception:
+        app.logger.exception("TEACHER LOGIN ERROR")
         return {
             "success": False,
-            "message": "Server error occurred"
+            "message": "Teacher login failed."
         }, 500
 
 
-# ============================================================
 # TEACHER DASHBOARD
-# ============================================================
-
 @app.route("/teacher-dashboard")
 def teacher_dashboard():
-
     if not session.get("teacher_logged_in"):
-
         return redirect("/teacher-login")
-
     return render_template("Teacher-Dashboard.html")
+
+
+# TEACHER ATTENDANCE TABLE
  
-
-# ============================================================
-# TEACHER ATTENDANCE
-# ============================================================
-
+# TEACHER ATTENDANCE TABLE
 @app.route("/teacher-attendance")
 def teacher_attendance():
-
     if not session.get("teacher_logged_in"):
-
         return redirect("/teacher-login")
 
     try:
+        result = (
+            supabase.table("attendance")
+            .select("student_id, subject, date, time, status")
+            .order("date", desc=True)
+            .order("time", desc=True)
+            .execute()
+        )
 
-        connection = get_connection()
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            SELECT student_id, subject, date, time, status
-            FROM attendance
-            ORDER BY date DESC, time DESC
-        """)
-
-        records = cursor.fetchall()
-
-        connection.close()
+        app.logger.info(
+            "Teacher attendance rows fetched: %s",
+            len(result.data or [])
+        )
 
         return render_template(
             "teacher-attendance.html",
-            records=records
+            records=result.data or []
         )
 
-    except Exception as error:
+    except Exception as e:
+        app.logger.exception("TEACHER ATTENDANCE ERROR")
+        return f"Teacher attendance error: {str(e)}", 500
 
-        print("TEACHER ATTENDANCE ERROR:", error)
-
-        return "Unable to load attendance", 500
-
-
-# ============================================================
 # ATTENDANCE REPORT
-# ============================================================
-
 @app.route("/attendance-report")
 def attendance_report():
-
     if not session.get("teacher_logged_in"):
-
         return redirect("/teacher-login")
 
     try:
+        result = (
+            supabase.table("attendance")
+            .select("student_id, status")
+            .execute()
+        )
 
-        connection = get_connection()
-        cursor = connection.cursor()
+        student_data = {}
 
-        cursor.execute("""
-            SELECT
-                student_id,
-                SUM(
-                    CASE
-                        WHEN status = 'Present' THEN 1
-                        ELSE 0
-                    END
-                ),
-                COUNT(*)
-            FROM attendance
-            GROUP BY student_id
-        """)
+        for record in result.data:
+            student_id = record["student_id"]
+            status = record["status"]
 
-        rows = cursor.fetchall()
+            if student_id not in student_data:
+                student_data[student_id] = {"present": 0, "total": 0}
 
-        connection.close()
+            student_data[student_id]["total"] += 1
+
+            if status == "Present":
+                student_data[student_id]["present"] += 1
 
         reports = []
 
-        for row in rows:
+        for student_id, data in student_data.items():
+            present = data["present"]
+            total = data["total"]
+            percentage = round((present / total) * 100, 2) if total else 0
 
-            student_id = row[0]
-            present = row[1]
-            total = row[2]
-
-            percentage = round(
-                (present / total) * 100,
-                2
-            ) if total > 0 else 0
-
-            reports.append(
-                (
-                    student_id,
-                    present,
-                    total,
-                    percentage
-                )
-            )
+            reports.append((student_id, present, total, percentage))
 
         return render_template(
             "attendance-report.html",
             reports=reports
         )
 
-    except Exception as error:
-
-        print("REPORT ERROR:", error)
-
-        return "Unable to generate report", 500
+    except Exception as e:
+         app.logger.exception("TEACHER ATTENDANCE ERROR")
+         return f"Unable to load attendance: {str(e)}", 500
 
 
-# ============================================================
-# LOGOUT
-# ============================================================
-
+# STUDENT LOGOUT
 @app.route("/logout")
 def logout():
-
     session.clear()
-
     return redirect("/")
 
 
-# ============================================================
 # TEACHER LOGOUT
-# ============================================================
-
 @app.route("/teacher-logout")
 def teacher_logout():
-
     session.clear()
-
     return redirect("/teacher-login")
 
 
-# ============================================================
 # HEALTH CHECK
-# ============================================================
-
 @app.route("/health")
 def health():
-
     return {
         "status": "ok",
         "message": "Smart Attendance server is running"
     }
 
 
-# ============================================================
 # START SERVER
-# ============================================================
-
 if __name__ == "__main__":
-
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
-        debug=True
-    )
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
-    )
-
+    app.run(host="127.0.0.1", port=5000, debug=False)
+ 
