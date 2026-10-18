@@ -1,4 +1,4 @@
-
+﻿
 from flask import Flask, request, render_template, redirect, session
 from datetime import datetime
 from supabase import create_client
@@ -20,8 +20,6 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     )
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-print("SUPABASE URL:", SUPABASE_URL)
-print("KEY PREFIX:", SUPABASE_KEY[:15])
 
 
 # HOME / STUDENT LOGIN
@@ -236,7 +234,7 @@ def mark_attendance():
             "message": "Unable to mark attendance. Please try again."
         }, 500
 
-      
+
 # MY ATTENDANCE PAGE
 @app.route("/my-attendance")
 def my_attendance():
@@ -348,7 +346,7 @@ def teacher_dashboard():
 
 
 # TEACHER ATTENDANCE TABLE
- 
+
 # TEACHER ATTENDANCE TABLE
 @app.route("/teacher-attendance")
 def teacher_attendance():
@@ -450,4 +448,4 @@ def health():
 # START SERVER
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=False)
- 
+
